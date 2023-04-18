@@ -1,9 +1,7 @@
-require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
-const md5 = require('md5');
 const app = express();
 
 app.use(express.static('public'));
@@ -12,10 +10,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect("mongodb://localhost:27017/secretsDB");
 
-const userSchema = new mongoose.Schema({
+const userSchema = {
     email: String,
     password: String
-});
+};
 
 const User = new mongoose.model("User", userSchema);
 
@@ -34,7 +32,7 @@ app.get("/register", function(req, res){
 
 app.post("/register", function(req, res){
     const emailRegister = req.body.username;
-    const passRegister = md5(req.body.password);
+    const passRegister = req.body.password;
 
     if(!emailRegister || !passRegister){
         res.render("register");
@@ -51,7 +49,7 @@ app.post("/register", function(req, res){
 
 app.post("/login", function(req, res){
     const emailLogin = req.body.username;
-    const passLogin = md5(req.body.password);
+    const passLogin = req.body.password;
 
     if(!emailLogin || !passLogin){
         res.render("login");
