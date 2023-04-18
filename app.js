@@ -3,9 +3,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const md5 = require('md5');
 const app = express();
-const saltRounds = 10;
 
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
@@ -35,51 +34,38 @@ app.get("/register", function(req, res){
 
 app.post("/register", function(req, res){
     const emailRegister = req.body.username;
-    const passRegister = req.body.password;
+    const passRegister = md5(req.body.password);
 
-    bcrypt.hash(passRegister, saltRounds, function(err, hash) {
-        if(!emailRegister || !passRegister){
-            res.render("register");
-        } else {
-            const newUser = new User({
-                email: emailRegister,
-                password: hash
-            });
-    
-            newUser.save().then(() => console.log("New user successfully saved!"));
-            res.render("secrets");
-        }
-    });
-    
+    if(!emailRegister || !passRegister){
+        res.render("register");
+    } else {
+        const newUser = new User({
+            email: emailRegister,
+            password: passRegister
+        });
+
+        newUser.save().then(() => console.log("New user successfully saved!"));
+        res.render("secrets");
+    }
 });
 
 app.post("/login", function(req, res){
     const emailLogin = req.body.username;
-    const passLogin = req.body.password;
+    const passLogin = md5(req.body.password);
 
     if(!emailLogin || !passLogin){
         res.render("login");
     } else {
         User.findOne({ email: emailLogin }).then(function(user){
-            bcrypt.compare(passLogin, user.password, function(err, result) {
-                if(result == true){
-                    res.render("secrets");
-                } else {
-                    console.log("Incorrect username or password!")
-                    res.render("login");
-                }
-            });
+            if(user.password == passLogin){
+                res.render("secrets");
+            } else {
+                console.log("Incorrect username or password!")
+                res.render("login");
+            }
         });
     }
 });
-
-
-
-
-
-
-
-
 
 app.listen(3000, function(){
     console.log("Server started on port 3000");
